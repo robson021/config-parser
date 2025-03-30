@@ -1,49 +1,27 @@
+mod error;
+mod file_utils;
+mod logger_config;
+
+use crate::file_utils::{get_file_type, FileType};
 use std::error::Error;
-use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Debug)]
-enum ParserError {
-    UnsupportedFileFormat,
-    FileNotFound,
-}
-
-impl Display for ParserError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(&"Unsupported file format", f)
+pub fn parse<T>(path: &str) -> Result<&T, Box<dyn Error>> {
+    unsafe {
+        logger_config::setup_logger();
     }
-}
 
-impl Error for ParserError {}
+    let props = match get_file_type(path)? {
+        FileType::Properties => parse_properties::<T>(path),
+        FileType::Yaml => parse_yaml::<T>(path),
+    };
 
-enum FileType {
-    Properties,
-    Yaml,
-}
-
-fn get_file_type(path: &str) -> Result<FileType, Box<dyn Error>> {
-    let is_yaml = path.ends_with(".yaml") || path.ends_with(".yml");
-    if is_yaml {
-        Ok(FileType::Yaml)
-    } else if path.ends_with(".properties") {
-        Ok(FileType::Properties)
-    } else {
-        Err(ParserError::UnsupportedFileFormat.into())
-    }
-}
-
-pub fn pare<T>(path: &str) -> Result<&T, Box<dyn Error>> {
-    match get_file_type(path) {
-        Ok(file_type) => match file_type {
-            FileType::Properties => parse_properties(path),
-            FileType::Yaml => {
-                todo!()
-            }
-        },
-        Err(e) => Err(e),
-    }
+    todo!() // map props to struct T
 }
 
 fn parse_properties<T>(path: &str) -> Result<&T, Box<dyn Error>> {
+    todo!()
+}
+fn parse_yaml<T>(path: &str) -> Result<&T, Box<dyn Error>> {
     todo!()
 }
 
