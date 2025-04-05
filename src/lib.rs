@@ -2,7 +2,7 @@ mod error;
 mod file_utils;
 mod logger_config;
 
-use crate::file_utils::{get_file_type, FileType};
+use crate::file_utils::{FileType, get_file_type};
 use std::error::Error;
 
 pub fn parse<T>(path: &str) -> Result<&T, Box<dyn Error>> {
