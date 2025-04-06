@@ -1,9 +1,8 @@
 use crate::error::ParserError;
 use log::debug;
-use std::collections::HashMap;
 use std::error::Error;
-use std::fs::{File, read_to_string};
-use std::io::{BufRead, BufReader};
+use std::fs::read_to_string;
+use std::io::BufRead;
 use std::path::Path;
 
 pub enum FileType {
@@ -30,26 +29,7 @@ pub fn get_file_type(path: &str) -> Result<FileType, Box<dyn Error>> {
     }
 }
 
-pub fn read_properties_to_map(path: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
-    let file = File::open(path)?;
-    let reader = BufReader::new(file);
-
-    debug!("Reading properties from: {}", path);
-
+pub fn read_file_to_string(path: &str) -> Result<Vec<String>, Box<dyn Error>> {
     let lines: Vec<String> = read_to_string(path)?.lines().map(String::from).collect();
-
-    let props: Result<HashMap<String, String>, _> =
-        lines.iter().map(|x| to_key_value_pair(x)).collect();
-    props
-}
-
-#[inline]
-fn to_key_value_pair(line: &str) -> Result<(String, String), Box<dyn Error>> {
-    let kv = line.split("=").collect::<Vec<&str>>();
-    if kv.len() != 2 {
-        return Err(Box::new(ParserError::InvalidPropertiesFormat));
-    }
-    let key = String::from(kv[0]);
-    let value = String::from(kv[1]);
-    Ok((key, value))
+    Ok(lines)
 }
