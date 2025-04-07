@@ -1,8 +1,8 @@
+use crate::MapOfProps;
 use crate::error::ParserError;
-use std::collections::HashMap;
 use std::error::Error;
 
-pub fn properties_to_map(lines: &Vec<String>) -> Result<HashMap<String, String>, Box<dyn Error>> {
+pub fn properties_to_map(lines: &[String]) -> Result<MapOfProps, Box<dyn Error>> {
     lines.iter().map(|x| to_key_value_pair(x)).collect()
 }
 

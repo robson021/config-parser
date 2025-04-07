@@ -1,21 +1,21 @@
 use serde::Deserialize;
-use std::error::Error;
 
-pub fn yaml_to_object<'de, T>(s: &'de str) -> Result<T, serde_yaml::Error>
+pub fn yaml_to_object<T>(s: String) -> Result<T, serde_yaml::Error>
 where
-    T: Deserialize<'de>,
+    T: for<'a> Deserialize<'a>,
 {
-    let parsed = serde_yaml::from_str(s)?;
+    let parsed = serde_yaml::from_str(&s.clone())?;
     Ok(parsed)
 }
 
 #[cfg(test)]
+#[allow(dead_code)]
 mod tests {
     use super::*;
     use serde::Serialize;
 
-    fn get_simple_input() -> &'static str {
-        "aaa: 1.5\nbbb: 2.3\n"
+    fn get_simple_input() -> String {
+        "aaa: 1.5\nbbb: 2.3\n".to_string()
     }
 
     fn get_complex_input() -> &'static str {

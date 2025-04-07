@@ -2,7 +2,6 @@ use crate::error::ParserError;
 use log::debug;
 use std::error::Error;
 use std::fs::read_to_string;
-use std::io::BufRead;
 use std::path::Path;
 
 pub enum FileType {
