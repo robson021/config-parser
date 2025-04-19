@@ -4,7 +4,7 @@ use std::fmt;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
-pub enum ParserError {
+pub(crate) enum ParserError {
     UnsupportedFileFormat,
     FileNotFound,
     InvalidPropertiesFormat,

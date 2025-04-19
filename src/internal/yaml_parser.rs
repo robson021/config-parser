@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-pub fn yaml_to_object<T>(s: String) -> Result<T, serde_yaml::Error>
+pub(crate) fn yaml_to_object<T>(s: String) -> Result<T, serde_yaml::Error>
 where
     T: for<'a> Deserialize<'a>,
 {

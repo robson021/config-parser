@@ -8,7 +8,7 @@ static mut LOGGER_INIT: bool = false;
 
 const LOG_PATTERN: &str = "{d} |{l}|: {m}{n}";
 
-pub unsafe fn setup_logger() {
+pub(crate) unsafe fn setup_logger() {
     unsafe {
         if LOGGER_INIT {
             return;

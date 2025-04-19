@@ -1,8 +1,8 @@
 use crate::MapOfProps;
-use crate::error::ParserError;
+use crate::internal::error::ParserError;
 use std::error::Error;
 
-pub fn properties_to_map(lines: &[String]) -> Result<MapOfProps, Box<dyn Error>> {
+pub(crate) fn properties_to_map(lines: &[String]) -> Result<MapOfProps, Box<dyn Error>> {
     lines.iter().map(|x| to_key_value_pair(x)).collect()
 }
 

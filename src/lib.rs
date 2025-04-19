@@ -1,10 +1,7 @@
-mod error;
-mod file_utils;
-mod logger_config;
-mod properties_parser;
-mod yaml_parser;
+mod internal;
 
-use crate::file_utils::{FileType, get_file_type};
+use crate::internal::file_utils::{FileType, get_file_type};
+use crate::internal::{file_utils, logger_config, properties_parser, yaml_parser};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::error::Error;
