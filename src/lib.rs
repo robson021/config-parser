@@ -13,9 +13,7 @@ pub fn parse_to_object<T>(path: &str) -> Result<T, Box<dyn Error>>
 where
     T: for<'a> Deserialize<'a>,
 {
-    unsafe {
-        logger_config::setup_logger();
-    }
+    logger_config::setup_logger();
     match get_file_type(path)? {
         FileType::Properties => unimplemented!(),
         FileType::Yaml => parse_yaml(path),
@@ -35,4 +33,23 @@ where
     let file_content = file_utils::read_file_to_string(path)?;
     let parsed = yaml_parser::yaml_to_object(&file_content)?;
     Ok(parsed)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde::*;
+
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct TestYaml {
+        aaa: HashMap<String, HashMap<String, String>>,
+        ddd: String,
+        list: Vec<String>,
+    }
+
+    #[test]
+    fn parse_yaml() {
+        let result: TestYaml = parse_to_object("resources/test/test_input.yml").unwrap();
+        println!("{:?}", result);
+    }
 }

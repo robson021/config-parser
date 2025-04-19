@@ -3,16 +3,13 @@ use log4rs::append::console::ConsoleAppender;
 use log4rs::append::console::Target;
 use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
+use std::sync::Once;
 
-static mut LOGGER_INIT: bool = false;
+pub(crate) fn setup_logger() {
+    const LOG_PATTERN: &str = "{d} |{l}|: {m}{n}";
+    static INIT: Once = Once::new();
 
-const LOG_PATTERN: &str = "{d} |{l}|: {m}{n}";
-
-pub(crate) unsafe fn setup_logger() {
-    unsafe {
-        if LOGGER_INIT {
-            return;
-        }
+    INIT.call_once(|| {
         let stderr = ConsoleAppender::builder()
             .encoder(Box::new(PatternEncoder::new(LOG_PATTERN)))
             .target(Target::Stderr)
@@ -32,6 +29,5 @@ pub(crate) unsafe fn setup_logger() {
         } else {
             log::set_max_level(LevelFilter::Info);
         }
-        LOGGER_INIT = true;
-    }
+    });
 }

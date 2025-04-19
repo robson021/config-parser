@@ -6,16 +6,18 @@ use std::fmt::{Display, Formatter};
 #[derive(Debug)]
 pub(crate) enum ParserError {
     UnsupportedFileFormat,
-    FileNotFound,
-    InvalidPropertiesFormat,
+    FileNotFound(String),
+    InvalidPropertiesFormat(String),
 }
 
 impl Display for ParserError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            FileNotFound => fmt::Display::fmt(&"File not found", f),
+            FileNotFound(path) => format!("File not found: {}", path).fmt(f),
             UnsupportedFileFormat => fmt::Display::fmt(&"Unsupported file format", f),
-            InvalidPropertiesFormat => fmt::Display::fmt(&"Invalid properties", f),
+            InvalidPropertiesFormat(reason) => {
+                format!("Invalid properties. Reason: {}", reason).fmt(f)
+            }
         }
     }
 }

@@ -11,7 +11,10 @@ fn to_key_value_pair(line: &str) -> Result<(String, String), Box<dyn Error>> {
     const KEY_VALUE_SEPARATOR: &str = "=";
 
     if !line.contains(KEY_VALUE_SEPARATOR) {
-        return Err(Box::new(ParserError::InvalidPropertiesFormat));
+        return Err(Box::new(ParserError::InvalidPropertiesFormat(format!(
+            "Missing key-value separator '{}' in line: '{}'",
+            KEY_VALUE_SEPARATOR, line
+        ))));
     }
 
     let kv = line.split(KEY_VALUE_SEPARATOR).collect::<Vec<&str>>();
@@ -26,7 +29,10 @@ fn to_key_value_pair(line: &str) -> Result<(String, String), Box<dyn Error>> {
             return Ok((String::from(kv[0]), String::from("")));
         }
     }
-    Err(Box::new(ParserError::InvalidPropertiesFormat))
+    Err(Box::new(ParserError::InvalidPropertiesFormat(format!(
+        "Invalid line: '{}'",
+        line
+    ))))
 }
 
 #[cfg(test)]

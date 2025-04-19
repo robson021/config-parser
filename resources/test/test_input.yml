@@ -1,0 +1,12 @@
+aaa:
+  nested-1:
+    bbb: abc
+    ccc: 123
+  nested-2:
+    x: xxx
+    y: yyy
+list:
+  - 1
+  - 2
+  - 3
+ddd: lorem ipsum
