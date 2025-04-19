@@ -33,6 +33,6 @@ where
     T: for<'a> Deserialize<'a>,
 {
     let file_content = file_utils::read_file_to_string(path)?;
-    let parsed = yaml_parser::yaml_to_object(file_content)?;
+    let parsed = yaml_parser::yaml_to_object(&file_content)?;
     Ok(parsed)
 }
