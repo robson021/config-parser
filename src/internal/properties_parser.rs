@@ -2,7 +2,7 @@ use crate::MapOfProps;
 use crate::internal::error::ParserError;
 use std::error::Error;
 
-pub(crate) fn properties_to_map(lines: &[String]) -> Result<MapOfProps, Box<dyn Error>> {
+pub(crate) fn properties_to_map(lines: &[String]) -> MapOfProps {
     lines.iter().map(|x| to_key_value_pair(x)).collect()
 }
 

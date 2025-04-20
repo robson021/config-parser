@@ -6,10 +6,19 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::error::Error;
 
-type MapOfProps = HashMap<String, String>;
+type MapOfProps = Result<HashMap<String, String>, Box<dyn Error>>;
 type Parsable<T> = Result<T, Box<dyn Error>>;
 
-pub fn parse_to_object<T>(path: &str) -> Result<T, Box<dyn Error>>
+pub fn load_all_configs_in_dir<T>(
+    path: &str,
+    config_suffix: &str,
+    file_extension: Option<&str>,
+) -> Parsable<T> {
+    let configs = file_utils::get_file_paths_with_substring(path, config_suffix, file_extension)?;
+    todo!()
+}
+
+pub fn parse_to_object<T>(path: &str) -> Parsable<T>
 where
     T: for<'a> Deserialize<'a>,
 {
@@ -20,7 +29,7 @@ where
     }
 }
 
-pub fn parse_properties_to_map(path: &str) -> Result<MapOfProps, Box<dyn Error>> {
+pub fn parse_properties_to_map(path: &str) -> MapOfProps {
     let lines = file_utils::read_file_to_vec(path)?;
     let map_of_props = properties_parser::properties_to_map(&lines)?;
     Ok(map_of_props)

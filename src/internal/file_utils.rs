@@ -3,11 +3,51 @@ use log::{debug, error};
 use std::error::Error;
 use std::fs::read_to_string;
 use std::path::Path;
+use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug)]
 pub(crate) enum FileType {
     Properties,
     Yaml,
+}
+
+pub(crate) fn get_file_paths_with_substring(
+    path: &str,
+    substring: &str,
+    extension: Option<&str>,
+) -> Result<Vec<String>, Box<dyn Error>> {
+    verify_if_path_exists(path)?;
+
+    let config_files: Vec<String> = WalkDir::new(path)
+        .into_iter()
+        .flat_map(|entry_result| entry_result.ok())
+        .flat_map(|entry| entry.metadata().ok().map(|meta| (meta, entry)))
+        .filter(|(meta, __)| meta.is_file())
+        .map(|(_, entry)| entry.path().to_string_lossy().to_string())
+        .filter(|path| path.contains(substring))
+        .collect();
+
+    match extension {
+        None => Ok(config_files),
+        Some(extension) => {
+            let cfg_files_with_extension = config_files
+                .iter()
+                .filter(|x| x.ends_with(extension))
+                .map(|x| x.to_owned())
+                .collect();
+            Ok(cfg_files_with_extension)
+        }
+    }
+}
+
+fn verify_if_path_exists(path: &str) -> Result<(), Box<dyn Error>> {
+    if Path::new(&path).exists() {
+        debug!("Path exists: {}", path);
+        Ok(())
+    } else {
+        error!("Path not found: {}", path);
+        Err(Box::new(ParserError::FileNotFound(path.to_string())))
+    }
 }
 
 pub(crate) fn get_file_type(path: &str) -> Result<FileType, Box<dyn Error>> {
@@ -21,13 +61,8 @@ pub(crate) fn get_file_type(path: &str) -> Result<FileType, Box<dyn Error>> {
         Err(ParserError::UnsupportedFileFormat.into())
     };
 
-    if Path::new(&path).exists() {
-        debug!("File found: {}", path);
-        file_type
-    } else {
-        error!("File not found: {}", path);
-        Err(Box::new(ParserError::FileNotFound(path.to_string())))
-    }
+    verify_if_path_exists(path)?;
+    file_type
 }
 
 pub(crate) fn read_file_to_string(path: &str) -> Result<String, Box<dyn Error>> {
@@ -42,7 +77,8 @@ pub(crate) fn read_file_to_vec(path: &str) -> Result<Vec<String>, Box<dyn Error>
 
 #[cfg(test)]
 mod tests {
-    use crate::internal::file_utils::{FileType, get_file_type};
+    use crate::internal::file_utils::{FileType, get_file_paths_with_substring, get_file_type};
+
     use std::path::PathBuf;
     use std::sync::Once;
 
@@ -56,7 +92,7 @@ mod tests {
     }
 
     #[test]
-    fn valid_aml_file_exists() {
+    fn valid_yaml_file_exists() {
         setup_test_resources();
         let file_type = get_file_type("resources/test/test_input.yml").unwrap();
         assert_eq!(file_type, FileType::Yaml)
@@ -82,5 +118,30 @@ mod tests {
             error.to_string(),
             "File not found: invalid/path/file.properties"
         );
+    }
+
+    #[test]
+    fn find_all_test_files() {
+        let files = get_file_paths_with_substring("resources/test", "_input", None).unwrap();
+        assert_eq!(files.len(), 3);
+
+        let expected_1 = &"resources/test/test_input.yml".to_string();
+        let expected_2 = &"resources/test/test2_input.yml".to_string();
+        let expected_3 = &"resources/test/test_input.properties".to_string();
+        assert!(files.contains(expected_1));
+        assert!(files.contains(expected_2));
+        assert!(files.contains(expected_3));
+    }
+
+    #[test]
+    fn find_yaml_files_only() {
+        let files =
+            get_file_paths_with_substring("resources/test", "_input.yml", Some(".yml")).unwrap();
+        assert_eq!(files.len(), 2);
+
+        let expected_1 = &"resources/test/test_input.yml".to_string();
+        let expected_2 = &"resources/test/test2_input.yml".to_string();
+        assert!(files.contains(expected_1));
+        assert!(files.contains(expected_2));
     }
 }

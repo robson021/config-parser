@@ -4,14 +4,13 @@ pub(crate) fn yaml_to_object<T>(s: &str) -> Result<T, serde_yaml::Error>
 where
     T: for<'a> Deserialize<'a>,
 {
-    let parsed = serde_yaml::from_str(s)?;
+    let parsed: T = serde_yaml::from_str(s)?;
     Ok(parsed)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde::Serialize;
     use std::collections::HashMap;
 
     fn get_simple_input() -> String {
@@ -24,7 +23,7 @@ mod tests {
             .to_string()
     }
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    #[derive(Debug, Deserialize)]
     struct Simple {
         aaa: String,
         bbb: String,
