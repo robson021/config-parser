@@ -9,13 +9,19 @@ use std::error::Error;
 type MapOfProps = Result<HashMap<String, String>, Box<dyn Error>>;
 type Parsable<T> = Result<T, Box<dyn Error>>;
 
-pub fn load_all_configs_in_dir<T>(
+pub fn load_all_yaml_configs<T: for<'a> serde::Deserialize<'a>>(
     path: &str,
     config_suffix: &str,
-    file_extension: Option<&str>,
-) -> Parsable<T> {
-    let configs = file_utils::get_file_paths_with_substring(path, config_suffix, file_extension)?;
-    todo!()
+) -> Result<Vec<Parsable<T>>, Box<dyn Error>> {
+    let extensions = FileType::Yaml.get_extensions();
+    let configs = file_utils::find_file_paths(path, config_suffix, extensions)?;
+
+    let configs: Vec<Parsable<T>> = configs
+        .into_iter()
+        .map(|config| parse_to_object(&config))
+        .collect();
+
+    Ok(configs)
 }
 
 pub fn parse_to_object<T>(path: &str) -> Parsable<T>
@@ -60,5 +66,21 @@ mod tests {
     fn parse_yaml() {
         let result: TestYaml = parse_to_object("resources/test/test_input.yml").unwrap();
         println!("{:?}", result);
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct YamlToMap {
+        aaa: String,
+        bbb: HashMap<String, String>,
+    }
+
+    #[test]
+    fn load_yaml_configs() {
+        let configs: Vec<Parsable<YamlToMap>> =
+            load_all_yaml_configs("resources/test/multiple", "_cfg").unwrap();
+
+        println!("{:?}", configs);
+        assert_eq!(configs.len(), 2);
+        configs.iter().for_each(|config| assert!(config.is_ok()))
     }
 }

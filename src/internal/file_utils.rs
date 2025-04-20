@@ -11,33 +11,41 @@ pub(crate) enum FileType {
     Yaml,
 }
 
-pub(crate) fn get_file_paths_with_substring(
-    path: &str,
-    substring: &str,
-    extension: Option<&str>,
-) -> Result<Vec<String>, Box<dyn Error>> {
-    verify_if_path_exists(path)?;
+impl FileType {
+    pub(crate) fn get_extensions(&self) -> Vec<&str> {
+        match self {
+            FileType::Properties => vec!["properties"],
+            FileType::Yaml => vec!["yaml", "yml"],
+        }
+    }
+}
 
-    let config_files: Vec<String> = WalkDir::new(path)
+pub(crate) fn find_file_paths(
+    root: &str,
+    contained_substring: &str,
+    extensions: Vec<&str>,
+) -> Result<Vec<String>, Box<dyn Error>> {
+    verify_if_path_exists(root)?;
+
+    let config_files: Vec<String> = WalkDir::new(root)
         .into_iter()
         .flat_map(|entry_result| entry_result.ok())
         .flat_map(|entry| entry.metadata().ok().map(|meta| (meta, entry)))
         .filter(|(meta, __)| meta.is_file())
         .map(|(_, entry)| entry.path().to_string_lossy().to_string())
-        .filter(|path| path.contains(substring))
+        .filter(|path| path.contains(contained_substring))
         .collect();
 
-    match extension {
-        None => Ok(config_files),
-        Some(extension) => {
-            let cfg_files_with_extension = config_files
-                .iter()
-                .filter(|x| x.ends_with(extension))
-                .map(|x| x.to_owned())
-                .collect();
-            Ok(cfg_files_with_extension)
-        }
+    if extensions.is_empty() {
+        return Ok(config_files);
     }
+
+    let cfg_files_with_extension = config_files
+        .iter()
+        .filter(|file| extensions.iter().any(|ext| file.ends_with(ext)))
+        .map(|x| x.to_owned())
+        .collect();
+    Ok(cfg_files_with_extension)
 }
 
 fn verify_if_path_exists(path: &str) -> Result<(), Box<dyn Error>> {
@@ -77,7 +85,7 @@ pub(crate) fn read_file_to_vec(path: &str) -> Result<Vec<String>, Box<dyn Error>
 
 #[cfg(test)]
 mod tests {
-    use crate::internal::file_utils::{FileType, get_file_paths_with_substring, get_file_type};
+    use crate::internal::file_utils::{FileType, find_file_paths, get_file_type};
 
     use std::path::PathBuf;
     use std::sync::Once;
@@ -122,11 +130,11 @@ mod tests {
 
     #[test]
     fn find_all_test_files() {
-        let files = get_file_paths_with_substring("resources/test", "_input", None).unwrap();
+        let files = find_file_paths("resources/test", "_input", vec![]).unwrap();
         assert_eq!(files.len(), 3);
 
         let expected_1 = &"resources/test/test_input.yml".to_string();
-        let expected_2 = &"resources/test/test2_input.yml".to_string();
+        let expected_2 = &"resources/test/test2_input.yaml".to_string();
         let expected_3 = &"resources/test/test_input.properties".to_string();
         assert!(files.contains(expected_1));
         assert!(files.contains(expected_2));
@@ -135,12 +143,11 @@ mod tests {
 
     #[test]
     fn find_yaml_files_only() {
-        let files =
-            get_file_paths_with_substring("resources/test", "_input.yml", Some(".yml")).unwrap();
+        let files = find_file_paths("resources/test", "_input", vec!["yml", "yaml"]).unwrap();
         assert_eq!(files.len(), 2);
 
         let expected_1 = &"resources/test/test_input.yml".to_string();
-        let expected_2 = &"resources/test/test2_input.yml".to_string();
+        let expected_2 = &"resources/test/test2_input.yaml".to_string();
         assert!(files.contains(expected_1));
         assert!(files.contains(expected_2));
     }
